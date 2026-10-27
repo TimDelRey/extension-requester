@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Request Catcher · тестовая страница</title>
+  <style>
+    * { box-sizing: border-box; } body { margin: 0; padding: 60px 24px; color: #dfe8e5; background: #12191a; font: 15px/1.7 system-ui, sans-serif; } main { max-width: 850px; margin: auto; } .tag { color: #93e1c1; font-size: 11px; letter-spacing: 2px; } h1 { font-size: 38px; letter-spacing: -1.5px; margin: 8px 0 16px; } p { color: #9eafab; max-width: 690px; } .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 30px 0; } button, .actions a { cursor: pointer; color: #13271e; background: #9ee9cc; font: 600 13px system-ui; padding: 13px 17px; border: 0; border-radius: 7px; text-decoration: none; } button.secondary { background: #263a32; color: #b8e4d2; } pre { background: #1b2525; border: 1px solid #34453f; padding: 20px; border-radius: 10px; overflow: auto; min-height: 130px; font: 12px/1.8 ui-monospace, monospace; } code { color: #c0e8d9; } #state { font-size: 12px; } iframe { border: 1px solid #34453f; border-radius: 8px; width: 100%; height: 135px; margin-top: 18px; }
+  </style>
+</head>
+<body><main>
+  <span class="tag">REQUEST CATCHER / LOCAL PLAYGROUND</span>
+  <h1>Поймайте этот запрос.</h1>
+  <p>Откройте расширение, нажмите «Включить перехват», дождитесь «ОЖИДАЮ ЗАПРОС» и нажмите «Отправить JSON». В редакторе измените, например, <code>name</code> и <code>quantity</code>, добавьте заголовок <code>X-Test: hello</code> и продолжите отправку. Здесь появится то, что получил сервер.</p>
+  <div class="actions">
+    <button id="json">Отправить JSON</button>
+    <button id="xhr" class="secondary">Отправить XHR</button>
+    <button id="form" class="secondary">Отправить форму</button>
+    <button id="upload" class="secondary">Multipart с файлом</button>
+    <a id="navigation" href="/echo?navigation=original">Навигация GET</a>
+    <button id="redirect" class="secondary">Редирект 302 (по pointerdown)</button>
+  </div>
+  <p id="state" aria-live="polite">Запрос ещё не отправлялся.</p>
+  <pre id="result">Сервер покажет метод, URL, заголовки и тело запроса.</pre>
+  <script>
+    const result = document.getElementById('result');
+    const status = document.getElementById('state');
+    async function send(body, headers) {
+      status.textContent = 'Ожидаю ответ… Если включён перехват, запрос задержан в расширении.';
+      try {
+        const response = await fetch('/echo?source=original', { method: 'POST', headers, body });
+        result.textContent = await response.text();
+        status.textContent = 'Готово: ниже данные, которые получил сервер.';
+      } catch (error) { status.textContent = 'Запрос отменён: ' + error.message; }
+    }
+    document.getElementById('json').onclick = () => send(JSON.stringify({ name: 'Tim', quantity: 1 }), { 'Content-Type': 'application/json', 'X-Demo': 'original' });
+    document.getElementById('form').onclick = () => send(new URLSearchParams({ name: 'Tim', quantity: '1' }));
+    document.getElementById('upload').onclick = () => {
+      const form = new FormData(); form.append('name', 'Tim');
+      form.append('file', new Blob([new Uint8Array([0, 1, 2, 255, 128])]), 'sample.bin');
+      send(form);
+    };
+    document.getElementById('xhr').onclick = () => {
+      status.textContent = 'Ожидаю ответ XHR…';
+      const xhr = new XMLHttpRequest(); xhr.open('POST', '/echo?source=xhr');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = () => { result.textContent = xhr.responseText; status.textContent = 'XHR завершён.'; };
+      xhr.onerror = () => { status.textContent = 'XHR отменён.'; };
+      xhr.send(JSON.stringify({ name: 'Tim', quantity: 1 }));
+    };
+    document.getElementById('redirect').addEventListener('pointerdown', () => {
+      location.assign('/redirect?source=pointerdown');
+    });
+  </script>
+</main></body>
+</html>

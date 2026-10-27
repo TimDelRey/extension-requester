@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Request Catcher</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <header class="app-header"><h1>Request Catcher</h1></header>
+  <main>
+    <div class="tab-context"><span id="tab-title">Текущая вкладка</span><span id="tab-host"></span></div>
+    <section class="status-card" aria-live="polite">
+      <div class="status-line"><span id="status-dot" class="status-dot"></span><span id="status-label">ГОТОВ К ПЕРЕХВАТУ</span><span id="request-kind" class="pill" hidden></span></div>
+      <p id="status-message">Настройте перехват и нажмите кнопку ниже.</p>
+    </section>
+    <div id="error" class="error" role="alert" hidden></div>
+
+    <section id="setup">
+      <h2>Перехват</h2>
+      <label for="trigger">Когда остановить запрос</label>
+      <select id="trigger"><option value="next">Ближайший запрос (рекомендуется)</option><option value="click">После следующего клика</option></select>
+      <div class="field-grid">
+        <div><label for="types">Тип запросов</label><select id="types"><option value="all">Все (включая переходы)</option><option value="api">Только Fetch/XHR</option></select></div>
+        <div><label for="wait">Ожидание</label><select id="wait"><option value="3">3 с</option><option value="10">10 с</option><option value="30" selected>30 с</option></select></div>
+      </div>
+      <label for="url-filter">URL содержит <span class="muted">· необязательно</span></label>
+      <input id="url-filter" type="text" placeholder="Например, /api/orders" spellcheck="false" autocomplete="off">
+      <p id="capture-hint" class="hint">Включите перехват и выполните действие на сайте — запрос остановится перед отправкой.</p>
+      <button id="arm" class="primary full"><span aria-hidden="true">⌖</span> Включить перехват</button>
+      <button id="stop" class="secondary full" hidden>Выключить перехват</button>
+    </section>
+
+    <section id="editor" hidden>
+      <div class="section-heading"><h2>Редактор</h2><button id="reset" class="text-button" type="button">Сбросить</button></div>
+      <div class="request-line"><div><label for="method">Метод</label><input id="method" type="text" list="methods" spellcheck="false" autocomplete="off"><datalist id="methods"><option value="GET"><option value="POST"><option value="PUT"><option value="PATCH"><option value="DELETE"><option value="HEAD"></datalist></div><div><label for="url">URL и параметры</label><input id="url" type="url" spellcheck="false" autocomplete="off"></div></div>
+      <p class="hint">URL меняется только в пределах исходного origin — это защищает cookie и токены от утечки на другой сайт.</p>
+      <p id="request-help" class="hint"></p>
+      <nav class="editor-tabs" aria-label="Параметры запроса"><button id="tab-headers" class="editor-tab selected" type="button" aria-pressed="true">Заголовки <span id="header-count"></span></button><button id="tab-body" class="editor-tab" type="button" aria-pressed="false">Тело</button></nav>
+      <div id="headers-pane">
+        <label class="sr-only" for="headers">Заголовки запроса</label>
+        <textarea id="headers" class="code" spellcheck="false" autocomplete="off" rows="13" wrap="off"></textarea>
+        <p class="hint">По строке на заголовок: <code>Name: value</code>. Host и технические заголовки Chrome задаёт сам.</p>
+      </div>
+      <div id="body-pane" hidden>
+        <div class="body-toolbar"><label class="checkbox-label"><input id="replace-body" type="checkbox"> Заменить тело целиком</label><select id="encoding" aria-label="Кодировка тела"><option value="utf8">Текст UTF-8</option><option value="base64">Base64</option></select></div>
+        <p id="body-warning" class="warning" hidden></p>
+        <label class="sr-only" for="body">Тело запроса</label>
+        <textarea id="body" class="code" spellcheck="false" autocomplete="off" rows="13" readonly placeholder="Тело запроса пустое" wrap="off"></textarea>
+        <div class="body-footer"><span id="body-size"></span><button id="format-json" class="text-button" type="button" disabled>Форматировать JSON</button></div>
+        <p class="hint">Без замены уйдут исходные байты. Для multipart сохраните boundary из Content-Type.</p>
+      </div>
+      <div class="send-actions"><button id="send" class="primary full">Отправить с изменениями <span aria-hidden="true">↗</span></button><div class="action-row"><button id="send-original" class="secondary">Отправить исходный</button><button id="cancel" class="danger">Отменить запрос</button></div></div>
+    </section>
+    <footer><p>Данные остаются только в браузере. Закрытие панели отменяет запрос на паузе.</p></footer>
+    <details class="limitations"><summary>Что нужно знать</summary><p>Chrome показывает уведомление об отладке — не отключайте его, пока запрос на паузе. Перехватывается один запрос за цикл, остальные проходят; OPTIONS пропускаются автоматически. CORS и проверки сервера продолжают действовать. Сообщения WebSocket и ответы Service Worker без сети не перехватываются.</p></details>
+  </main>
+  <script src="panel.js" type="module"></script>
+</body>
+</html>
